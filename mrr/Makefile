@@ -6,3 +6,6 @@ mrr: mrr.c
 
 clean:
 	rm -f *.o mrr
+
+docker:
+	docker build --tag mrr:latest .
