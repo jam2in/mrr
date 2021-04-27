@@ -2,7 +2,7 @@ FROM gcc
 
 COPY . .
 
-RUN make
+RUN make mrr
 
 ENTRYPOINT ["./mrr"]
 
