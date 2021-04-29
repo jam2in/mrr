@@ -1,9 +1,14 @@
-FROM gcc
+FROM alpine as builder
 
 COPY . .
 
-RUN make mrr
+RUN apk upgrade; \
+apk add build-base linux-headers; \
+make
 
-ENTRYPOINT ["./mrr"]
+FROM alpine
+COPY --from=builder /mrr /
+
+ENTRYPOINT ["/mrr"]
 
 
