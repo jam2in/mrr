@@ -1,3 +1,4 @@
+VERSION ?= develop
 
 all: mrr
 
@@ -8,4 +9,7 @@ clean:
 	rm -f *.o mrr
 
 docker:
-	docker build --tag mrr:latest .
+	- docker buildx create --name project-v3-builder
+	docker buildx use project-v3-builder
+	- docker buildx build --push --platform=linux/arm64,linux/amd64 --tag jam2in/mrr:${VERSION} --progress tty .
+	- docker buildx rm project-v3-builder
