@@ -162,6 +162,7 @@ check_thread(void *arg)
   /* Do nother with locking */
   while (1) {
     usleep(100);
+    uint32_t temp_total_retrans = 0;
     int i;
     for (i = 0; i < checker_so_num; i++) {
       int so = checker_so[i];
@@ -182,8 +183,9 @@ check_thread(void *arg)
         max_retransmits = info.tcpi_retransmits;
       if (max_backoff == 0 || max_backoff < info.tcpi_backoff)
         max_backoff = info.tcpi_backoff;
-      total_retrans += info.tcpi_total_retrans;
+      temp_total_retrans += info.tcpi_total_retrans;
     }
+    total_retrans = temp_total_retrans;
   }
   return NULL;
 }
