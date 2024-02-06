@@ -43,7 +43,12 @@
 
 #define CHECK_RTO_RETRANS 1
 #if CHECK_RTO_RETRANS
+#ifdef __linux__
 #include <linux/tcp.h>
+#endif
+#ifdef __APPLE__
+#include <netinet/tcp.h>
+#endif
 #endif
 
 char *args_addr = "localhost";
@@ -166,6 +171,7 @@ check_thread(void *arg)
     int i;
     for (i = 0; i < checker_so_num; i++) {
       int so = checker_so[i];
+#ifdef __linux__
       struct tcp_info info;
       socklen_t size = sizeof(info);
       if (0 != getsockopt(so, IPPROTO_TCP, TCP_INFO, &info, &size))
@@ -184,6 +190,23 @@ check_thread(void *arg)
       if (max_backoff == 0 || max_backoff < info.tcpi_backoff)
         max_backoff = info.tcpi_backoff;
       temp_total_retrans += info.tcpi_total_retrans;
+#endif
+#ifdef __APPLE__
+      struct tcp_connection_info info;
+      socklen_t size = sizeof(info);
+      if (0 != getsockopt(so, IPPROTO_TCP, TCP_CONNECTION_INFO, &info, &size))
+        continue;
+
+      if (max_rto == 0 || max_rto < info.tcpi_rto)
+        max_rto = info.tcpi_rto;
+      if (min_rto == 0 || min_rto > info.tcpi_rto)
+        min_rto = info.tcpi_rto;
+      if (min_rtt == 0 || min_rtt > info.tcpi_rttcur)
+        min_rtt = info.tcpi_rttcur;
+      if (max_rtt == 0 || max_rtt < info.tcpi_rttcur)
+        max_rtt = info.tcpi_rttcur;
+      temp_total_retrans += info.tcpi_txretransmitpackets;
+#endif
     }
     total_retrans = temp_total_retrans;
   }
@@ -193,11 +216,18 @@ check_thread(void *arg)
 static void
 print_checker(void)
 {
-    printf("rto=%u:%u max_retrans=%u max_backoff=%u rtt=%u:%u tot_retrans=%u\n",
-      max_rto, min_rto, max_retransmits, max_backoff, max_rtt, min_rtt,
-      total_retrans);
-    max_rto = min_rto = max_retransmits =  max_backoff = 0;
-    max_rtt = min_rtt = total_retrans = 0;
+#ifdef __linux__
+  printf("rto=%u:%u max_retrans=%u max_backoff=%u rtt=%u:%u tot_retrans=%u\n",
+    max_rto, min_rto, max_retransmits, max_backoff, max_rtt, min_rtt,
+    total_retrans);
+  max_rto = min_rto = max_retransmits =  max_backoff = 0;
+  max_rtt = min_rtt = total_retrans = 0;
+#endif
+#ifdef __APPLE__
+  printf("rto=%u:%u rtt=%u:%u tot_retrans=%u\n",
+    max_rto, min_rto, max_rtt, min_rtt, total_retrans);
+  max_rto = min_rto = max_rtt = min_rtt = total_retrans = 0;
+#endif
 }
 
 static void *
