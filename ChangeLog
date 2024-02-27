@@ -1,3 +1,9 @@
+2024-02-27 [version 1.2.0]
+## 🐣 New Features
+* Add support for MacOS.
+## 📝 Documentation
+* Fix a typo.
+
 2023-11-07 [version 1.1.0]
 	* [FEATURE]  Add a help command.
 	* [INTERNAL] Add Dockerfile.
